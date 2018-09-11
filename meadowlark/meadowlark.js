@@ -1,17 +1,5 @@
 var express = require('express')
-var MongoClient = require('mongodb').MongoClient
-
-function mongoConnect(callback) {
-  MongoClient.connect('mongodb://localhost:27017/node-express-dev', function (err, client) {
-    if (err) throw err
-
-    var db = client.db('node-express-dev')
-
-    callback(db)
-
-    client.close()
-  })
-}
+var db = require('./db')
 
 var app = express()
 
@@ -27,17 +15,17 @@ app.get('/', function (req, res) {
 })
 
 app.get('/about', function (req, res) {
-  mongoConnect(function (db) {
-    db.collection('fortune').find().toArray(function (err, result) {
-      if (err) throw err
+  var collection = db.get().collection('fortune')
 
-      var fortunes = result.map(function (fortune) {
-        return fortune.content
-      })
+  collection.find().toArray(function (err, result) {
+    if (err) throw err
 
-      var randomFortune = fortunes[Math.floor(Math.random() * fortunes.length)];
-      res.render('about', { fortune: randomFortune });
+    var fortunes = result.map(function (fortune) {
+      return fortune.content
     })
+
+    var randomFortune = fortunes[Math.floor(Math.random() * fortunes.length)];
+    res.render('about', { fortune: randomFortune });
   })
 })
 
@@ -54,7 +42,13 @@ app.use(function (err, req, res, next) {
   res.render('500')
 })
 
-app.listen(app.get('port'), function () {
-  console.log('Express started on http://localhost:' +
-    app.get('port') + '; press Ctrl-C to terminate.')
+db.connect('mongodb://localhost:27017/node-express-dev', function(err) {
+  if (err) {
+    console.log('Unable to connect to Mongo.')
+  } else {
+    app.listen(app.get('port'), function () {
+      console.log('Express started on http://localhost:' +
+        app.get('port') + '; press Ctrl-C to terminate.')
+    })
+  }
 })
