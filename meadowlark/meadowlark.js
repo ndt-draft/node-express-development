@@ -1,5 +1,7 @@
 var express = require('express')
+
 var db = require('./db')
+var aboutRouter = require('./routes/about')
 
 var app = express()
 
@@ -14,20 +16,7 @@ app.get('/', function (req, res) {
   res.render('home')
 })
 
-app.get('/about', function (req, res) {
-  var collection = db.get().collection('fortune')
-
-  collection.find().toArray(function (err, result) {
-    if (err) throw err
-
-    var fortunes = result.map(function (fortune) {
-      return fortune.content
-    })
-
-    var randomFortune = fortunes[Math.floor(Math.random() * fortunes.length)];
-    res.render('about', { fortune: randomFortune });
-  })
-})
+app.use('/about', aboutRouter)
 
 app.use(express.static('public'))
 
@@ -42,7 +31,9 @@ app.use(function (err, req, res, next) {
   res.render('500')
 })
 
-db.connect('mongodb://localhost:27017/node-express-dev', function(err) {
+db.connect('mongodb://localhost:27017/node-express-dev', {
+  useNewUrlParser: true
+}, function(err) {
   if (err) {
     console.log('Unable to connect to Mongo.')
   } else {

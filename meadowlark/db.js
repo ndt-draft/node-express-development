@@ -4,12 +4,12 @@ var state = {
   db: null
 }
 
-exports.connect = function(url, done) {
+exports.connect = function(url, options, done) {
   if (state.db) {
     done()
   }
 
-  MongoClient.connect(url, function (err, client) {
+  MongoClient.connect(url, options, function (err, client) {
     if (err) return done(err)
 
     state.db = client.db('node-express-dev')
